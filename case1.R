@@ -153,7 +153,7 @@ for ( i in 1:n){
 
 sum_D=matrix(0, 2, 2)  
 for (i in 1:n){
-  sum_D=sum_D+ t(D[[i]])%*%D[[i]]   ##sum of D[i] to be used for updating beta in equation (20)
+  sum_D=sum_D+ t(D[[i]])%*%D[[i]]   
 }
 
 ####################################################################
