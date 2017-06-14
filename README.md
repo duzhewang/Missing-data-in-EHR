@@ -1,5 +1,7 @@
 # Missing-data-in-EHR
 
+For privacy, The detailed design of this simulation is described, updated weekly and uploaded to Box.com. 
+
 A. Some imprtant variable names:
 1. v_sim: synthetic time-invariant covariate
 2. eta_sim: true value of eta
@@ -17,7 +19,7 @@ B. Variable names used in the Gibbs sampling iteration:
 XM, eta, v, beta, M, sgmr2, sgm2, E, b, c, e
 
 C. Updates:
-1. As of 6/14/2017: test Case 1 listed in Table 1 of Report 3. 
+1. As of 6/14/2017: testing Case 1 listed in Table 1 of Report 3. 
 
 
 
