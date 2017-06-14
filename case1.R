@@ -185,7 +185,7 @@ c_keep=matrix(0, nrow=n_iter, ncol=n) ##record latent class for each subject, on
 b_keep=matrix(0, nrow=n_iter, ncol=n) ##record b[i], one row  one iteration
 e_keep=matrix(0, nrow=n_iter, ncol=n) ##record e[i], one row one iteration
 Pi1_keep=matrix(0, n, K )    ##equation (1)
-Pi_c_keep=matrix(0, n, K)    ##equation (19)
+Pi_c_keep=matrix(0, n, K)    ##used to update c
 
 
 for (m in 1:n_iter){
@@ -202,7 +202,7 @@ for (m in 1:n_iter){
     for (l in 1:K){
       top=ifelse(l==1,Pi1_keep[i,l]*dmvnorm(XM[i,], mean=D[[i]]%*%beta+D_dstar[[i]]*b[i],sigma=sgm2*diag(T)),
                  Pi1_keep[i,l]*dmvnorm(XM[i,], mean=D[[i]]%*%beta+D_star[[i]]*M[l]+D_dstar[[i]]*b[i],sigma=sgm2*diag(T)))
-      Pi_c_keep[i,l]=top/bot            ##equation (19)
+      Pi_c_keep[i,l]=top/bot            
     }
   }
   c=apply(Pi_c_keep, 1, function(x) rcat(n=1, p=x)) ##assign latent class to each subject
@@ -282,22 +282,22 @@ for (m in 1:n_iter){
   sum_M=rep(0,3)
   for(l in 2:K){
     for(i in 1:length(which(c==l))){
-      sum_M[l-1]=sum_M[l-1]+sum(XM[which(c==l)[i]]-D[[which(c==l)[i]]]%*%beta-D_dstar[[which(c==l)[i]]]*b[which(c==l)[i]] )  ##equation (21)
+      sum_M[l-1]=sum_M[l-1]+sum(XM[which(c==l)[i]]-D[[which(c==l)[i]]]%*%beta-D_dstar[[which(c==l)[i]]]*b[which(c==l)[i]] )  
     }
   }
   for (l in 2:K){
     var_M=(1+(1/sgm2)*sum(c==l)*5)^{-1}
     mean_M=(1/sgm2)*var_M*(sum_M[l-1])
-    M[l]=rnorm(1, mean=mean_M, sd=sqrt(var_M)) ##equation (21)
+    M[l]=rnorm(1, mean=mean_M, sd=sqrt(var_M)) 
   }
   
   ##sample sigma_{r}^{2}
-  sgmr2=rigamma(n=1, alpha=(n/2)+1, beta=1/2*sum(b^{2})+1) ##equation (23)
+  sgmr2=rigamma(n=1, alpha=(n/2)+1, beta=1/2*sum(b^{2})+1) 
   
   ##sample sigma^{2}
   sum_rate_sgm2=0
   for (i in 1:n){
-    sum_rate_sgm2=sum_rate_sgm2+sum((XM[i]-D[[i]]%*%beta-D_star[[i]]*M[c[i]]-D_dstar[[i]]*b[i])^{2})  ##equation (22)
+    sum_rate_sgm2=sum_rate_sgm2+sum((XM[i]-D[[i]]%*%beta-D_star[[i]]*M[c[i]]-D_dstar[[i]]*b[i])^{2})  
   }
   rate_sgm2=1/2*sum_rate_sgm2+1
   sgm2=rigamma(n=1, alpha=n*T/2+1, beta = rate_sgm2)
