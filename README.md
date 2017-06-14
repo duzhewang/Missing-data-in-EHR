@@ -2,7 +2,7 @@
 
 For privacy, The detailed design of this simulation is described, updated weekly and uploaded to Box.com. 
 
-A. Some imprtant variable names:
+A. Some important variable names:
 1. v_sim: synthetic time-invariant covariate
 2. eta_sim: true value of eta
 3. beta_sim: true value of beta
