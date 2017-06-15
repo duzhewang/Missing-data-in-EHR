@@ -153,7 +153,11 @@ for ( i in 1:n){
 
 sum_D=matrix(0, 2, 2)  
 for (i in 1:n){
+<<<<<<< HEAD
   sum_D=sum_D+ t(D[[i]])%*%D[[i]]   
+=======
+  sum_D=sum_D+ t(D[[i]])%*%D[[i]]   ##sum of D[i] to be used for updating beta 
+>>>>>>> update case 1
 }
 
 ####################################################################
