@@ -2,7 +2,7 @@
 
 For privacy, The detailed design of this simulation is described, updated weekly and uploaded to Box.com. 
 
-A. Some important variable names:
+-**Some important variable names**:
 1. v_sim: synthetic time-invariant covariate
 2. eta_sim: true value of eta
 3. beta_sim: true value of beta
@@ -14,12 +14,13 @@ A. Some important variable names:
 9. Y_sim: synthetic data
 10. XM_sim: synthetic data with missing values
 
-B. Variable names used in the Gibbs sampling iteration:
+-**Variable names used in the Gibbs sampling iteration**:
+    XM, eta, v, beta, M, sgmr2, sgm2, E, b, c, e
 
-XM, eta, v, beta, M, sgmr2, sgm2, E, b, c, e
+-**Updates**:
 
-C. Updates:
-1. As of 6/14/2017: testing Case 1 listed in Table 1 of Report 3. 
+1. As of 6/14/2017: testing Case 1 listed in Table 1 of Report 3.
+2. 6/15/2017: test issue: codes are unstable, sometimes work, sometimes doesn't. 
 
 
 
