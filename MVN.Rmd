@@ -1,0 +1,154 @@
+---
+title: "density of Multivariate Normal distribution"
+author: "Duzhe Wang"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This experiment is to show that when updating $c_{i}$, the very small density of multivariate normal distribution might be an issue for R computing. 
+
+```{r,include=FALSE}
+rm(list=ls())
+library(MASS) ##use function mvrnorm
+library(LaplacesDemon) ##use function rcat
+library(mvtnorm)  ##use function dmvnorm, rmvt
+
+n=100 ##number of subject
+K=4 ##number of latent classes
+
+##assign each subject the number of tracked quarters
+T=sample(5:40, size=n, replace=TRUE) 
+
+##set up true values of eta, beta, M, v, sgm2 and sgmr2
+eta_sim=c(0, 0.7, 1.6, 0.9)
+beta_sim=c(-0.4, 0.5)
+M_sim=c(-1.6, -0.6, 0.6, 1.2) 
+v_sim=c(0.5, -0.3)
+sgmr2_sim=1                ##true value of variance of b_{i}
+sgm2_sim=1                 ##true value of variance of epsilon_{it}
+E_sim=1                    ##true value of variance of e_{i}
+
+##generate time-invariate covariate V_{i}
+V_sim=rnorm(n=n, mean=0, sd=1)
+
+##simulate latent class c[i] for each subject 
+Pi_sim=matrix(0, n, K )   ##Pi[i,l]=P(c_{i}=l|V_{i})
+for (i in 1:n){
+  for (l in 1:K){
+    Pi_sim[i,l]=exp(V_sim[i]*eta_sim[l])/sum(exp(V_sim[i]*eta_sim))
+  }
+}
+c_sim=apply(Pi_sim, 1, function(x) rcat(n=1, p=x)) ##assign latent class to each subject
+
+##generate random effect b_{i}
+b_sim=rnorm(n,mean=0, sd=sqrt(sgmr2_sim))  
+
+##set D_{i}, D^{*}_{i} and D^{**}_{i}
+D=matrix(0, max(T), 2*n)
+for (i in 1:n){
+  D[1:T[i], 2*i-1]=rep(1, T[i])
+  D[1:T[i], 2*i]=rep(V_sim[i], T[i])
+}
+
+D_star=matrix(0, max(T), n)
+for (i in 1:n){
+  D_star[1:T[i],i]=1:T[i]
+}
+
+D_dstar=matrix(0, max(T), n)
+for (i in 1:n){
+  D_dstar[1:T[i],i]=rep(1, T[i])
+}
+
+##sum_D is used in updating beta
+sum_D=matrix(0, 2, 2)
+for (i in 1:n){
+  sum_D=sum_D+t(D[1:T[i],c(2*i-1, 2*i)])%*%D[1:T[i], c(2*i-1, 2*i)] 
+}
+
+##simulate X_{it}
+X_sim=matrix(0, nrow=max(T), ncol = n) ##each column is one subject
+for (i in 1:n){
+  X_sim[1:T[i],i]=D[1:T[i],c(2*i-1,2*i)]%*%beta_sim+
+    D_star[1:T[i],i]*M_sim[c_sim[i]]+
+    D_dstar[1:T[i],i]*b_sim[i]+          ##each column is one subject
+    rnorm(n=T[i], mean = 0, sd=sqrt(sgm2_sim))
+}
+
+
+```
+
+**Part 1: test the density of $X_{i}$ with its true mean and variance** 
+```{r}
+density_mvn=rep(0, n)
+for(i in 1:n){
+      density_mvn[i]=dmvnorm(X_sim[1:T[i],i], mean=D[1:T[i],c(2*i-1,2*i)]%*%beta_sim+
+                             D_star[1:T[i],i]*M_sim[c_sim[i]]+
+                             D_dstar[1:T[i],i]*b_sim[i],
+                             sigma=sgm2_sim*diag(T[i])
+      )
+}
+
+density_mvn
+```
+
+**Part 2: test the density of $X_{i}$ with different mean and variance set by initial values**
+```{r}
+##initial values
+inits=list(eta1=0, eta2=0.5, eta3=1.3, eta4=1,
+           beta=c(-0.5, 0.8),
+           M1=-2, M2=-1, M3=1.2, M4=0.6, 
+           v=c(0.3, -1),
+           sgmr2=1.5^2,
+           sgm2=1.5^2, 
+           E=1.5^2, 
+           b=rnorm(n, mean=0, sd=1.5),             ##initial value of random effect b_{i}
+           e=rnorm(n, mean=0, sd=1.5)              ##initial value of random effect e_{i}
+)
+
+#set initial value of latent class for each subject
+eta_ini=c(inits$eta1,inits$eta2,inits$eta3,inits$eta4)
+Pi_ini=matrix(0, n, K )  
+for (i in 1:n){
+  for (l in 1:K){
+    Pi_ini[i,l]=exp(V_sim[i]*eta_ini[l])/sum(exp(V_sim[i]*eta_ini))
+  }
+}
+c_ini=apply(Pi_ini, 1, function(x) rcat(n=1, p=x)) 
+
+##variable names in the iteration
+eta=c(inits$eta1,inits$eta2,inits$eta3,inits$eta4)
+v=inits$v
+beta=inits$beta
+M=c(inits$M1,inits$M2,inits$M3,inits$M4)
+sgmr2=inits$sgmr2
+sgm2=inits$sgm2
+E=inits$E
+c=c_ini
+b=inits$b
+e=inits$e
+X=X_sim    ##rename the simulated compelete X_{it} data as X
+f_c=matrix(0,n, K)     ## for updating c
+
+for(i in 1:n){
+    for (l in 1:K){
+      f_c[i,l]=dmvnorm(X[1:T[i],i], mean=D[1:T[i],c(2*i-1,2*i)]%*%beta+
+                         D_star[1:T[i],i]*M[l]+
+                         D_dstar[1:T[i],i]*b[i],
+                       sigma=sgm2*diag(T[i])
+      )
+    }
+  }
+
+f_c
+
+```
+
+
+
+
+
+
