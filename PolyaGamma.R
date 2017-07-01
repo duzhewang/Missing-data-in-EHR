@@ -1,14 +1,15 @@
 #----------------------------------
 # BAYESIAN METHOD SIMULATIOIN 
-# Last updated date: 6/29/2017
+# Last updated date: 7/1/2017
 #----------------------------------
 rm(list=ls())
+set.seed(0311)
 library(MASS) ##use function mvrnorm
 library(LaplacesDemon) ##use function rcat
 library(MCMCpack) ##use function rinvgamma, default rate=1
 library(mvtnorm)  ##use function dmvnorm, rmvt
 library(pscl)  ##use function rigamma 
-library(metRology)  ##use function rt.scaled 
+#library(metRology)  ##use function rt.scaled 
 library(BayesLogit) ##use rpg
 
 #---------------------------------
@@ -20,13 +21,13 @@ K=4 ##number of latent classes
 ##assign each subject the number of tracked quarters
 T=sample(5:40, size=n, replace=TRUE) 
 
-#--------------------------------
-#   Complete data generation
-#--------------------------------
-##set up true values of eta, beta, M, v, sgm2 and sgmr2
+#--------------------------------------
+#   Complete simulated data generation
+#--------------------------------------
+##set up true values of parameters
 eta_sim=c(0, 0.7, 1.6, 0.9)
 beta_sim=c(-0.4, 0.5)
-M_sim=c(-1.6, -0.6, 0.6, 1.2) 
+M_sim=c(0, -0.6, 0.6, 1.2) 
 v_sim=c(0.5, -0.3)
 sgmr2_sim=1                ##true value of variance of b_{i}
 sgm2_sim=1                 ##true value of variance of epsilon_{it}
@@ -48,13 +49,13 @@ c_sim=apply(Pi_sim, 1, function(x) rcat(n=1, p=x)) ##assign latent class to each
 b_sim=rnorm(n,mean=0, sd=sqrt(sgmr2_sim))  
 
 ##set D_{i}, D^{*}_{i} and D^{**}_{i}
-D=matrix(0, max(T), 2*n)
+D=matrix(0, max(T), 2*n)              ##each two columns for one subject
 for (i in 1:n){
   D[1:T[i], 2*i-1]=rep(1, T[i])
   D[1:T[i], 2*i]=rep(V_sim[i], T[i])
 }
 
-D_star=matrix(0, max(T), n)
+D_star=matrix(0, max(T), n)   
 for (i in 1:n){
   D_star[1:T[i],i]=1:T[i]
 }
@@ -71,29 +72,30 @@ for (i in 1:n){
 }
 
 ##simulate X_{it}
-X_sim=matrix(0, nrow=max(T), ncol = n) ##each column is one subject
+X_sim=matrix(0, nrow=max(T), ncol = n)  ##each column is one subject
 for (i in 1:n){
   X_sim[1:T[i],i]=D[1:T[i],c(2*i-1,2*i)]%*%beta_sim+
-    D_star[1:T[i],i]*M_sim[c_sim[i]]+
-    D_dstar[1:T[i],i]*b_sim[i]+          ##each column is one subject
-    rnorm(n=T[i], mean = 0, sd=sqrt(sgm2_sim))
+                  D_star[1:T[i],i]*M_sim[c_sim[i]]+
+                  D_dstar[1:T[i],i]*b_sim[i]+          
+                  rnorm(n=T[i], mean = 0, sd=sqrt(sgm2_sim))
 }
 
 ##generate random effect e_{i}
 e_sim=rnorm(n, mean=0, sd=sqrt(E_sim))
 
 ##generate y_{it}
-Y_sim=matrix(0,nrow=max(T), ncol=n)
+Y_sim=matrix(0,nrow=max(T), ncol=n)     ##each column is one subject
 for (i in 1:n){
   top= exp(cbind(D[1:T[i],2*i], X_sim[1:T[i],i])%*%v_sim+rep(e_sim[i],T[i]))
   bot=rep(1, T[i])+top
-  Y_sim[1:T[i],i]=rbinom(n=T[i], size=1, p=top/bot)   ##each column is one subject
+  Y_sim[1:T[i],i]=rbinom(n=T[i], size=1, p=top/bot)   
 }
+
 
 #-------------------------------------------
 #          PRIORS AND INITIAL VALUES    
 #-------------------------------------------
-beta_pri=10^{4}   ##variance of normal prior
+beta_pri=10^{4} 
 M_pri=10^{4}
 sgm2_pri=0.001
 sgmr2_pri=0.001
@@ -104,7 +106,7 @@ eta_pri=10^{4}
 ##initial values
 inits=list(eta1=0, eta2=0.5, eta3=1.3, eta4=1,
            beta=c(-0.5, 0.8),
-           M1=-2, M2=-1, M3=1.2, M4=0.6, 
+           M1=0, M2=-1, M3=1.2, M4=0.6, 
            v=c(0.3, -1),
            sgmr2=1.5^2,
            sgm2=1.5^2, 
@@ -113,7 +115,7 @@ inits=list(eta1=0, eta2=0.5, eta3=1.3, eta4=1,
            e=rnorm(n, mean=0, sd=1.5)              ##initial value of random effect e_{i}
 )
 
-#set initial value of latent class for each subject
+#set initial latent class for each subject
 eta_ini=c(inits$eta1,inits$eta2,inits$eta3,inits$eta4)
 Pi_ini=matrix(0, n, K )  
 for (i in 1:n){
@@ -126,7 +128,7 @@ c_ini=apply(Pi_ini, 1, function(x) rcat(n=1, p=x))
 #--------------------------------------------------
 #        GIBBS SAMPLING-ITERATIONS                       
 #--------------------------------------------------
-n_iter=1000          ##number of iterations
+n_iter=10000         ##number of iterations
 
 ##variable names in the iteration
 eta=c(inits$eta1,inits$eta2,inits$eta3,inits$eta4)
@@ -139,13 +141,13 @@ E=inits$E
 c=c_ini
 b=inits$b
 e=inits$e
-X=X_sim    ##rename the simulated compelete X_{it} data as X
+X=X_sim    ##rename the simulated compelete X_{it}
 
 ##recording structure, each row is one iteration
-eta_keep=matrix(0, nrow=n_iter, ncol=3)  
+eta_keep=matrix(0, nrow=n_iter, ncol=K)  
 v_keep=matrix(0, nrow=n_iter, ncol=2)    
 beta_keep=matrix(0, nrow=n_iter, ncol=2)  
-M_keep=matrix(0, nrow=n_iter, ncol=4)    
+M_keep=matrix(0, nrow=n_iter, ncol=K)    
 sgmr2_keep=rep(0, n_iter)  
 sgm2_keep=rep(0, n_iter)   
 E_keep=rep(0, n_iter)     
@@ -166,7 +168,7 @@ for(i in 1:n){
   B_v[(sum(T[1:i])-T[i]+1):sum(T[1:i]),2]=X[1:T[i],i]
 }
 
-for (m in 1:n_iter){  ##iteration 
+for (m in 1:n_iter){  ##iteration starts
   
   ##sample c_{i} for all i
   for (i in 1:n){
@@ -178,9 +180,9 @@ for (m in 1:n_iter){  ##iteration
   for(i in 1:n){
     for (l in 1:K){
       f_c[i,l]=dmvnorm(X[1:T[i],i], mean=D[1:T[i],c(2*i-1,2*i)]%*%beta+
-                         D_star[1:T[i],i]*M[l]+
-                         D_dstar[1:T[i],i]*b[i],
-                       sigma=sgm2*diag(T[i])
+                                    D_star[1:T[i],i]*M[l]+
+                                    D_dstar[1:T[i],i]*b[i],
+                                    sigma=sgm2*diag(T[i])
       )
     }
   }
@@ -204,10 +206,10 @@ for (m in 1:n_iter){  ##iteration
   mean_beta=(1/sgm2)*var_beta%*%sum_beta
   beta=mvrnorm(n=1, mu=mean_beta, Sigma = var_beta)
   
-  ##sample M
+  ##sample M2, M3 and M4
   M_mat1=matrix(0, n, K)
   M_mat2=matrix(0, n, K)
-  for(l in 1:K){
+  for(l in 2:K){
     index=which(c==l)
     num_index=length(index)
     for(i in 1:num_index){
@@ -227,11 +229,11 @@ for (m in 1:n_iter){  ##iteration
     sum_sgm2=sum_sgm2+t(X[1:T[i], i]-D[1:T[i], c(2*i-1, 2*i)]%*%beta-D_star[1:T[i],i]*M[c[i]]-D_dstar[1:T[i],i]*b[i])%*%
       (X[1:T[i], i]-D[1:T[i], c(2*i-1, 2*i)]%*%beta-D_star[1:T[i],i]*M[c[i]]-D_dstar[1:T[i],i]*b[i])
   }
-  rate_sgm2=1/2*sum_sgm2+sgm2_pri
-  sgm2=rigamma(n=1, alpha=1/2*sum(T)+sgm2_pri, beta=rate_sgm2)
+  rate_sgm2=(1/2)*sum_sgm2+sgm2_pri
+  sgm2=rigamma(n=1, alpha=(1/2)*sum(T)+sgm2_pri, beta=rate_sgm2)
   
   ##sample sigma_{r}^{2}
-  sgmr2=rigamma(n=1, alpha=(n/2)+sgmr2_pri, beta=1/2*sum(b^{2})+sgmr2_pri) 
+  sgmr2=rigamma(n=1, alpha=(n/2)+sgmr2_pri, beta=(1/2)*sum(b^{2})+sgmr2_pri) 
   
   ##sample b[i]
   for (i in 1:n){
@@ -241,9 +243,9 @@ for (m in 1:n_iter){  ##iteration
   }  
 
   ##sample E
-  E=rigamma(n=1, alpha=n/2+E_pri, beta=1/2*sum(e^{2})+E_pri)
+  E=rigamma(n=1, alpha=n/2+E_pri, beta=(1/2)*sum(e^{2})+E_pri)
   
-  ##sample eta_{l}
+  ##sample eta2, eta3 and eta4
   for(l in 2:K){
     for(i in 1:n){
       tilting_eta=V_sim[i]*eta[l]-log(sum(exp(V_sim[i]*eta[-l])) )
@@ -285,9 +287,9 @@ for (m in 1:n_iter){  ##iteration
   
   ##record parameters
   c_keep[m, ]=c
-  eta_keep[m,]=eta[2:K]
   b_keep[m, ]=b
   e_keep[m, ]=e
+  eta_keep[m,]=eta
   v_keep[m, ]=v
   beta_keep[m, ]=beta
   M_keep[m, ]=M
@@ -295,7 +297,7 @@ for (m in 1:n_iter){  ##iteration
   sgm2_keep[m]=sgm2
   E_keep[m]=E
   
-} ##for m-th iteration
+} ##iteration ends
 
 
 
