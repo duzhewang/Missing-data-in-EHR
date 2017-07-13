@@ -1,0 +1,43 @@
+---
+title: "Check E"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#--------------------------------
+#  This file is used to
+#  1.check E
+#  Last updated date: 7/11/2017
+#--------------------------------
+```
+
+```{r, include=FALSE}
+setwd("/Users/peterwang/Desktop/Research/missingdata/Project/code/debug")
+source("data.generation.R")
+```
+
+```{r}
+##set other parameters equal their true values
+eta=eta_sim
+v=v_sim
+beta=beta_sim
+sgm2=sgm2_sim
+sgmr2=sgmr2_sim
+c=c_sim
+b=b_sim
+e=e_sim
+X=X_sim    ##rename the simulated compelete data X_{it}
+
+##sample E
+E=rigamma(n=1000, a=n/2+E_pri, b=(1/2)*sum(e^{2})+E_pri)
+
+##histogram and traceplot  
+histogram(E)
+traceplot(x=as.mcmc(E), ylab="E")
+
+```
+

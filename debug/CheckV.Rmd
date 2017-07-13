@@ -1,0 +1,91 @@
+---
+title: "Check v"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#--------------------------------
+#  This file is used to
+#  1.check v 
+#  Last updated date: 7/11/2017
+#--------------------------------
+```
+
+```{r, include=FALSE}
+setwd("/Users/peterwang/Desktop/Research/missingdata/Project/code/debug")
+source("data.generation.R")
+```
+
+```{r}
+##set parameters
+eta=eta_sim  
+v=v_sim 
+beta=beta_sim
+M=M_sim
+sgmr2=sgmr2_sim
+sgm2=sgm2_sim
+E=E_sim
+c=c_sim
+b=b_sim
+e=e_sim  
+X=X_sim    ##rename the simulated compelete X_{it}
+
+##number of iterations
+n_iter=10000         
+
+##recording structure
+v_keep=matrix(0, nrow=n_iter, ncol=2)
+e_keep=matrix(0, nrow=n_iter, ncol=n) 
+
+PG_v=matrix(0,n, max(T))    ## for w_{it} in updating v and e_{i}
+k_v_mat=matrix(0,n,max(T))  ## for k_{v} in updating v
+B_v=matrix(0,sum(T), 2)     ## for updating v 
+for(i in 1:n){
+  B_v[(sum(T[1:i])-T[i]+1):sum(T[1:i]),1]=rep(V_sim[i],T[i])
+  B_v[(sum(T[1:i])-T[i]+1):sum(T[1:i]),2]=X[1:T[i],i]
+}
+
+for (m in 1:n_iter){  
+  
+  ##sample v
+  for(i in 1:n){
+    for (t in 1:T[i]){
+      PG_v[i, t]=rpg(num=1,h=1,z=V_sim[i]*v[1]+X[t,i]*v[2]+e[i])   ##sample w_{it}^{*}
+      k_v_mat[i,t]=Y_sim[t,i]-1/2-PG_v[i,t]*e[i]
+    }
+  }
+  omega_v=NULL
+  for(i in 1:n){
+    omega_v=c(omega_v,PG_v[i,1:T[i]])
+  }
+  k_v=NULL
+  for(i in 1:n){
+    k_v=c(k_v,k_v_mat[i,1:T[i]])
+  }
+  S_v=solve((1/v_pri)*diag(2)+t(B_v)%*%diag(omega_v)%*%B_v)
+  m_v=S_v%*%t(B_v)%*%k_v
+  v=mvrnorm(n=1, mu=m_v, Sigma = S_v)
+  
+  ##sample e_{i}
+  for(i in 1:n){
+    S_e=((1/E)+ sum(PG_v[i,1:T[i]]) )^{-1}
+    B_k_e=sum(Y_sim[1:T[i],i])-T[i]*(1/2)-sum(PG_v[i,1:T[i]]*(B_v[(sum(T[1:i])-T[i]+1):sum(T[1:i]), ]%*%v))  ##B_{i}^{\top}k_{e_{i}}
+    m_e=S_e*B_k_e
+    e[i]=rnorm(n=1, mean=m_e, sd=sqrt(S_e))
+  }
+  
+  v_keep[m, ]=v
+  e_keep[m, ]=e
+ 
+}
+
+burnin=5000
+traceplot(x=as.mcmc(v_keep[ ,1]), ylab="v_1")
+traceplot(x=as.mcmc(v_keep[ ,2]), ylab="v_2")
+
+```
+

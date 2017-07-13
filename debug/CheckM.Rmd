@@ -1,0 +1,76 @@
+---
+title: "Check M"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#--------------------------------
+#  This file is used to
+#  1.check M2, M3 and M4
+#  Last updated date: 7/11/2017
+#--------------------------------
+```
+
+```{r, include=FALSE}
+setwd("/Users/peterwang/Desktop/Research/missingdata/Project/code/debug")
+source("data.generation.R")
+
+```
+
+```{r}
+##set other parameters equal their true values
+eta=eta_sim
+v=v_sim
+beta=beta_sim
+sgmr2=sgmr2_sim
+sgm2=sgm2_sim
+E=E_sim
+c=c_sim
+b=b_sim
+e=e_sim
+X=X_sim    ##rename the simulated compelete data X_{it}
+
+##sample M2, M3 and M4
+M_mat1=matrix(0, n, K)
+M_mat2=matrix(0, n, K)
+M=matrix(0,4,1000)
+for(l in 2:K){
+  index=which(c==l)
+  num_index=length(index)
+  for(i in 1:num_index){
+    M_mat1[i,l]=t(D_star[1:T[index[i]], index[i]])%*%D_star[1:T[index[i]], index[i]]
+    M_mat2[i,l]=t(D_star[1:T[index[i]], index[i]])%*%(X[1:T[index[i]],index[i]]-
+                                                        D[1:T[index[i]], c(2*index[i]-1, 2*index[i])]%*%beta-
+                                                        b[index[i]]*D_dstar[1:T[index[i]], index[i]])
+  }
+  var_M=((1/M_pri)+(1/sgm2)*colSums(M_mat1)[l])^{-1}
+  mean_M=(1/sgm2)*var_M*colSums(M_mat2)[l]
+  M[l, ]=rnorm(1000, mean=mean_M, sd=sqrt(var_M))
+}
+
+posterior.mean.M=c(mean(M[2,]), mean(M[3, ]), mean(M[4, ]))
+posterior.mean.M
+
+##traceplot  
+traceplot(x=as.mcmc(M[2, ]), ylab="M2")
+traceplot(x=as.mcmc(M[3, ]), ylab="M3")
+traceplot(x=as.mcmc(M[4, ]), ylab="M4")
+
+
+
+
+
+
+
+
+
+
+
+
+
+```
+
