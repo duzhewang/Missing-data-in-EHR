@@ -1,0 +1,222 @@
+---
+title: "two-components Gaussian Mixture model"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include=FALSE}
+rm(list=ls())
+library(LaplacesDemon) ##use function rcat
+library(coda)
+set.seed(0311)  
+```
+
+```{r}
+mcmc=function(N, r, n_iter, theta_ini, mu, burnin){
+## N is number of observations
+## r is mixture weights
+## n_iter is number of iterations
+## theta_ini is the initial value of theta
+## mu is the true means of two components  
+##burnin is the number of burn-in
+   
+#---------------------------
+#generate simulated data
+#---------------------------  
+##number of components
+K=2  
+
+probs = c(r,1-r)          
+dists = runif(N)        
+
+c_sim=vector(length=N) 
+X_sim=vector(length=N)
+for(i in 1:N){
+  if(dists[i]<probs[1]){
+    c_sim[i]=1  ##the first component
+    X_sim[i] = rnorm(1, mean=mu[1], sd=1)    
+  } else {
+    c_sim[i]=2  ## the second component
+    X_sim[i] = rnorm(1, mean=mu[2], sd=1)   
+  }
+}
+
+##summarize data
+plot(density(X_sim), main="density of simulated X")
+
+#--------------------
+## Gibbs sampling
+#--------------------
+
+##set initial values
+c=vector(length = N)
+theta=theta_ini
+
+##set priors
+theta_pri=10^{4}
+
+f_c=matrix(0, N, K)
+
+##recording structure, each row is one iteration
+theta_keep=matrix(0, nrow=n_iter, ncol=K)  
+c_keep=matrix(0, nrow=n_iter, ncol=N) 
+f_c_keep=matrix(0, nrow=n_iter, ncol=N) ##record the probability of c_{i}=1 in each iteration
+mean_M_keep=matrix(0, nrow=n_iter, ncol=K) 
+var_M_keep=matrix(0, nrow=n_iter, ncol=K)
+
+#------------------
+# RUN ITERATIONS
+#------------------
+for (m in 1:n_iter){  
+  
+  ##sample c_{i} for all i
+  for(i in 1:N){
+    for (l in 1:K){
+      f_c[i,l]=dnorm(X_sim[i], mean=theta[l],sd=1)*probs[l]
+    }
+  }
+  
+  for(i in 1:N){
+      f_c_keep[m, i]=f_c[i,1]/sum(f_c[i, ])
+      c[i]=rcat(n=1,p=f_c[i,]/sum(f_c[i, ]) )
+  }
+  
+  ##sample theta
+  for(l in 1:K){
+    index=which(c==l)
+    num_index=length(index)
+    var_M=((1/theta_pri)+num_index)^{-1}
+    mean_M=var_M*sum(X_sim[index])
+    var_M_keep[m,l]=var_M
+    mean_M_keep[m,l]=mean_M
+    theta[l]=rnorm(1, mean=mean_M, sd=sqrt(var_M))
+  }
+  
+  ##record parameters
+  c_keep[m, ]=c
+  theta_keep[m,]=theta
+  
+} ##iteration ends
+
+ ##diagnostics
+ thetaMean=apply(theta_keep[-(1:burnin), ], 2, mean)
+ thetaSD=apply(theta_keep[-(1:burnin), ],2, sd)
+ 
+ ClassProbs=vector(length=N) ##classification probability
+ for(i in 1:N){
+  ClassProbs[i]=length(which(c_keep[-(1:burnin),i]==1))/(n_iter-burnin)
+ }
+ 
+ traceplot(x=as.mcmc(theta_keep[-(1:burnin),1]), ylab="theta_1")
+ traceplot(x=as.mcmc(theta_keep[-(1:burnin),2]), ylab="theta_2")
+ plot(density(theta_keep[-(1:burnin),1]), main="density of theta1")
+ plot(density(theta_keep[-(1:burnin),2]), main="density of theta2")
+ 
+ return(list(cSim=c_sim, XSim=X_sim, ClassProbs=ClassProbs, thetaMean=thetaMean, thetaSD=thetaSD,
+             cKeep=c_keep[-(1:burnin), ], thetaKeep=theta_keep[-(1:burnin), ], 
+             fcKeep=f_c_keep[-(1:burnin), ], varMkeep=var_M_keep[-(1:burnin), ], meanMKeep=mean_M_keep[-(1:burnin), ]))
+}
+
+```
+
+
+##Case 1
+```{r}
+mcmc1=mcmc(N=1000, r=0.3, n_iter=50000, theta_ini=c(2, 12), mu=c(0,10), burnin=10000)
+mcmc1$ClassProbs
+mcmc1$thetaMean
+mcmc1$thetaSD
+mcmc1$cSim
+```
+
+##Case 2
+```{r}
+mcmc2=mcmc(N=1000, r=0.3, n_iter=50000, theta_ini=c(12, 2), mu=c(0,10), burnin=10000)
+mcmc2$ClassProbs
+mcmc2$thetaMean
+mcmc2$thetaSD
+mcmc2$cSim
+```
+
+##Case 3
+```{r}
+mcmc3=mcmc(N=1000, r=0.3, n_iter=50000, theta_ini=c(5, 5), mu=c(0,10), burnin=10000)
+mcmc3$ClassProbs
+mcmc3$thetaMean
+mcmc3$thetaSD
+mcmc3$cSim
+```
+
+##Case 4
+```{r}
+mcmc4=mcmc(N=1000, r=0.3, n_iter=50000, theta_ini=c(0.5, 0.5), mu=c(0,1), burnin=10000)
+mcmc4$ClassProbs
+mcmc4$thetaMean
+mcmc4$thetaSD
+mcmc4$cSim
+```
+
+##Case 5
+```{r}
+mcmc5=mcmc(N=1000, r=0.3, n_iter=50000, theta_ini=c(0.5, 1.5), mu=c(0,1), burnin=10000)
+mcmc5$ClassProbs
+mcmc5$thetaMean
+mcmc5$thetaSD
+mcmc5$cSim
+```
+
+##Case 6
+```{r}
+mcmc6=mcmc(N=1000, r=0.3, n_iter=50000, theta_ini=c(1.5, 0.5), mu=c(0,1), burnin=10000)
+mcmc6$ClassProbs
+mcmc6$thetaMean
+mcmc6$thetaSD
+mcmc6$cSim
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
