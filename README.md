@@ -8,6 +8,6 @@ For privacy, The detailed design of this simulation is described, updated weekly
 2. 6/15/2017: test issue: codes are unstable, sometimes work, sometimes doesn't. 
 3. 6/30/2017: upload a new version using Polya-Gamma method. 
 4. As of 7/12/2017: checked individual parameter and label switching. 
-
+5. As of 7/17/2017: MCARSim folder contains the new version of R code using matrix instead of for loop. 
 
 
