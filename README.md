@@ -10,5 +10,6 @@ For privacy, The detailed design of this simulation is described, updated weekly
 4. As of 7/12/2017: checked individual parameter and label switching. 
 5. As of 7/17/2017: MCARSim folder contains the new version of R code using matrix instead of for loop. 
 6. 7/21/2017: new versions of R code both for complete data simulation and MCAR simulation. 
+7. 7/28/2017: 1) add folder3, 4 and 5 in MCARSim folder, see details about these folders from README.txt at MCARSim; 2) add submodel3 folder which only check parameters and random effect in sub-model 3. 
 
 
