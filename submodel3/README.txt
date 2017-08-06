@@ -1,2 +1,0 @@
--case1: sub-model 3 without missing covariate X_{it}
--case2: sub-model 3 with missing covariate X_{it}: in MCMC, we set up the initial values of missing X_{it} using linear interpolation and update missing X_{it} in MCMC iterations using M-H algorithm. 
