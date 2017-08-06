@@ -1,0 +1,1 @@
+-f1 folder: detailed MAR setting are in report 10 MAR section. n=500, update beta NOT conditioned on b_{i}, impute the initial value of missing X_{it} by linear interpolation, and update missing X_{it} using M-H algorithm.
