@@ -1,0 +1,124 @@
+---
+title: "MCAR simulation-Method 1"
+date: "7/20/2017"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include=FALSE}
+setwd("/Users/peterwang/Desktop/Research/missingdata/Project/code/MCARSim/method1")
+time=system.time(source("MCAR_mcmc_update.R")) 
+```
+
+```{r}
+##run n_iter=10000 iterations
+time
+```
+
+```{r}
+burnin=5000
+(posterior.mean.eta=apply(eta_keep[-(1:burnin),],2, mean))
+(posterior.mean.M=apply(M_keep[-(1:burnin),],2, mean))
+(posterior.mean.v=apply(v_keep[-(1:burnin),],2, mean))
+(posterior.mean.beta=apply(beta_keep[-(1:burnin),],2, mean))
+(posterior.mean.sgmr2=mean(sgmr2_keep[-(1:burnin)]))
+(posterior.mean.sgm2=mean(sgm2_keep[-(1:burnin)]))
+(posterior.mean.E=mean(E_keep[-(1:burnin)]))
+```
+
+```{r}
+##mean of imputed X
+MI.mean.X=apply(X_keep[-(1:burnin),], 2, mean)
+##difference with the true X
+(diff=MI.mean.X-(XR$X)[R_sim==0])
+min(diff)
+max(diff)
+```
+
+```{r}
+##traceplots after burn-in
+##ture value of eta2 is 0.5 
+traceplot(x=as.mcmc(eta_keep[-(1:burnin),2]), ylab="eta_2")
+```
+
+```{r}
+##true value of eta3 is 1.5
+traceplot(x=as.mcmc(eta_keep[-(1:burnin),3]), ylab="eta_3")
+```
+
+```{r}
+##true value of eta4 is 1
+traceplot(x=as.mcmc(eta_keep[-(1:burnin),4]), ylab="eta_4")
+```
+
+```{r}
+##true value of v1 is 0.5
+traceplot(x=as.mcmc(v_keep[-(1:burnin),1]), ylab="v_1")
+```
+
+```{r}
+##true value of v2 is -0.3
+traceplot(x=as.mcmc(v_keep[-(1:burnin),2]), ylab="v_2")
+```
+
+```{r}
+##true value of beta1 is -0.4
+traceplot(x=as.mcmc(beta_keep[-(1:burnin),1]), ylab="beta_1")
+```
+
+```{r}
+##true value of beta2 is 0.5
+traceplot(x=as.mcmc(beta_keep[-(1:burnin),2]), ylab="beta_2")
+```
+
+```{r}
+##true value of M2 is -0.6
+traceplot(x=as.mcmc(M_keep[-(1:burnin),2]), ylab="M_2")
+```
+
+```{r}
+##true value of M3 is 0.6
+traceplot(x=as.mcmc(M_keep[-(1:burnin),3]), ylab="M_3")
+```
+
+```{r}
+##true value of M4 is 1.2
+traceplot(x=as.mcmc(M_keep[-(1:burnin),4]), ylab="M_4")
+```
+
+```{r}
+##true value of sgmr2 is 1
+traceplot(x=as.mcmc(sgmr2_keep[-(1:burnin)]), ylab="sgmr2")
+```
+
+```{r}
+##true value of sgm2 is 1
+traceplot(x=as.mcmc(sgm2_keep[-(1:burnin)]), ylab="sgm2")
+```
+
+```{r}
+##true value of E is 1
+traceplot(x=as.mcmc(E_keep[-(1:burnin)]), ylab="E")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
