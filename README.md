@@ -1,6 +1,6 @@
 # Missing-data-in-EHR
 
-##About R files
+## About R files
 
 | file names    | descriptions  |
 | ------------- |:-------------:|
@@ -63,7 +63,8 @@ inits=list(eta=c(0, 0.2, 1.3, 0.7),
 ```
 
 
-##About simulation studies
+## About simulation studies
+
 See [here](https://github.com/dzwang91/Missing-data-in-EHR/blob/master/simulations.pdf) for all simulation studies. 
 
 
