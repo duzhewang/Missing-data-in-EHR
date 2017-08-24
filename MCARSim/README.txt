@@ -1,19 +1,9 @@
--Method1 folder: update beta conditioned on b_{i}
+As of 8/20/2017:
 
--Method2 folder: update beta not conditioned on b_{i}
+-f6 folder(Study 4): n=500, 20% MCAR, update beta NOT conditioned on b_{i}, impute the initial value of missing X_{it} by linear interpolation, and update missing X_{it} using M-H algorithm.
 
--In both methods, we impute missing x using sub-model 2 directly.
+-f7 folder(Study 5): n=500, 50% MCAR, update beta NOT conditioned on b_{i}, impute the initial value of missing X_{it} by linear interpolation, and update missing X_{it} using M-H algorithm.
 
-———————————————————————————————————————————————————————————————————————
 
--folder3: update beta conditioned on b_{i}, impute the initial value of missing X_{it} from the available observations, and update missing X_{it} using M-H algorithm. 
+-f8 folder(Study 6): n=500, 50% MCAR, update beta NOT conditioned on b_{i}, impute the initial value of missing X_{it} by linear interpolation, and update missing X_{it} using M-H algorithm. Initial values of parameters are not close to true values. 
 
--folder4: update beta conditioned on b_{i}, impute the initial value of missing X_{it} by linear interpolation, and update missing X_{it} using M-H algorithm. 
-
--folder5: update beta NOT conditioned on b_{i}, impute the initial value of missing X_{it} by linear interpolation, and update missing X_{it} using M-H algorithm. 
-
-————————————————————————————————————————————————————————————————————————————
-
--f6 folder: n=500, 20% MCAR, update beta NOT conditioned on b_{i}, impute the initial value of missing X_{it} by linear interpolation, and update missing X_{it} using M-H algorithm.
-
--f7 folder: n=500, 50% MCAR, update beta NOT conditioned on b_{i}, impute the initial value of missing X_{it} by linear interpolation, and update missing X_{it} using M-H algorithm.
