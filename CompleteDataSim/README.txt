@@ -1,4 +1,4 @@
-8/20/2017:
+As of 8/20/2017:
 
 -f1(Study 1): update beta conditioned on b_{i}, initial values are close to the true values. 
  
